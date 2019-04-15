@@ -9,12 +9,13 @@ from .src.kern import Kern
 from .src.add import Add
 from .src.prod import Prod
 from .src.rbf import RBF
-from .src.linear import Linear, LinearFull
+from .src.linear import Linear, LinearFull, LinScaleShift
 from .src.static import Bias, White, Fixed, WhiteHeteroscedastic, Precomputed
 from .src.brownian import Brownian
-from .src.stationary import Exponential, OU, Matern32, Matern52, ExpQuad, RatQuad, Cosine
+from .src.stationary import Exponential, OU, Matern32, Matern52, ExpQuad, RatQuad, Cosine, RationalQuadratic, \
+    KernelKernel
 from .src.mlp import MLP
-from .src.periodic import PeriodicExponential, PeriodicMatern32, PeriodicMatern52
+from .src.periodic import PeriodicExponential, PeriodicMatern32, PeriodicMatern52, StandardPeriodic
 from .src.standard_periodic import StdPeriodic
 from .src.independent_outputs import IndependentOutputs, Hierarchical
 from .src.coregionalize import Coregionalize
