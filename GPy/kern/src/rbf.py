@@ -197,3 +197,71 @@ class RBFKernelKernel(RBF):
         if input_dict["inv_l"]:
             input_dict["lengthscale"] = np.sqrt(1 / float(self.inv_l))
         return input_dict
+
+
+class RBFDistanceBuilderKernelKernel(RBF):
+    """RBF distance builder kernel kernel"""
+
+    _support_GPU = True
+
+    def __init__(self, kernel_builder, n_models=0, input_dim=1, variance=1., lengthscale=None, ARD=False,
+                 active_dims=None, name='rbf_kernel_kernel', useGPU=False, inv_l=False):
+        super(RBFDistanceBuilderKernelKernel, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name,
+                                                             useGPU=useGPU, inv_l=inv_l)
+        self.kernel_builder = kernel_builder
+        self.n_models = n_models
+
+    ### overrride this
+
+    def _unscaled_dist(self, X, X2=None):
+        """
+        Compute the Euclidean distance between each row of X and X2, or between
+        each pair of rows of X if X2 is None.
+        """
+        if X2 is None:
+            X2 = X
+
+        r = self.kernel_builder.get_kernel(self.n_models)
+        r = r[X.astype(np.int), X2.astype(np.int)]
+        return r
+
+    ### overrride this
+    @Cache_this(limit=3, ignore_args=())
+    def _scaled_dist(self, X, X2=None):
+        """
+        Efficiently compute the scaled distance, r.
+
+        ..math::
+            r = \sqrt( \sum_{q=1}^Q (x_q - x'q)^2/l_q^2 )
+
+        Note that if thre is only one lengthscale, l comes outside the sum. In
+        this case we compute the unscaled distance first (in a separate
+        function for caching) and divide by lengthscale afterwards
+
+        """
+        if self.ARD:
+            # FIXME: currently ARD has no effect because input dim always = 1
+            #             if X2 is not None:
+            #                 X2 = X2 / self.lengthscale
+            #             return self._unscaled_dist(X/self.lengthscale, X2)
+            return self._unscaled_dist(X, X2) / self.lengthscale
+        else:
+            return self._unscaled_dist(X, X2) / self.lengthscale
+
+    ###
+
+    def to_dict(self):
+        """
+        Convert the object into a json serializable dictionary.
+
+        Note: It uses the private method _save_to_input_dict of the parent.
+
+        :return dict: json serializable dictionary containing the needed information to instantiate the object
+        """
+
+        input_dict = super(RBFDistanceBuilderKernelKernel, self)._save_to_input_dict()
+        input_dict["class"] = "GPy.kern.RBFKernelKernel"
+        input_dict["inv_l"] = self.use_invLengthscale
+        if input_dict["inv_l"] == True:
+            input_dict["lengthscale"] = np.sqrt(1 / float(self.inv_l))
+        return input_dict

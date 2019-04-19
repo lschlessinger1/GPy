@@ -8,7 +8,7 @@ Kernel module the kernels to sit in.
 from .src.kern import Kern
 from .src.add import Add
 from .src.prod import Prod
-from .src.rbf import RBF, RBFKernelKernel
+from .src.rbf import RBF, RBFKernelKernel, RBFDistanceBuilderKernelKernel
 from .src.linear import Linear, LinearFull, LinScaleShift
 from .src.static import Bias, White, Fixed, WhiteHeteroscedastic, Precomputed
 from .src.brownian import Brownian
