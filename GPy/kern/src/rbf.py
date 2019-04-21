@@ -204,11 +204,12 @@ class RBFDistanceBuilderKernelKernel(RBF):
 
     _support_GPU = True
 
-    def __init__(self, kernel_builder, n_models=0, input_dim=1, variance=1., lengthscale=None, ARD=False,
-                 active_dims=None, name='rbf_kernel_kernel', useGPU=False, inv_l=False):
+    def __init__(self, distance_builder, n_models=0, input_dim=1, variance=1., lengthscale=None, ARD=False,
+                 active_dims=None, name='rbf_db_kernel_kernel', useGPU=False, inv_l=False):
         super(RBFDistanceBuilderKernelKernel, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name,
                                                              useGPU=useGPU, inv_l=inv_l)
-        self.kernel_builder = kernel_builder
+        assert input_dim == 1
+        self.distance_builder = distance_builder
         self.n_models = n_models
 
     ### overrride this
@@ -220,9 +221,9 @@ class RBFDistanceBuilderKernelKernel(RBF):
         """
         if X2 is None:
             X2 = X
-
-        r = self.kernel_builder.get_kernel(self.n_models)
-        r = r[X.astype(np.int), X2.astype(np.int)]
+        r = self.distance_builder.get_kernel(self.n_models)
+        assert r.ndim == 2 and r.shape[0] == r.shape[1]
+        r = r[X.flatten().astype(np.int)][:, X2.flatten().astype(np.int)]
         return r
 
     ### overrride this
@@ -260,8 +261,8 @@ class RBFDistanceBuilderKernelKernel(RBF):
         """
 
         input_dict = super(RBFDistanceBuilderKernelKernel, self)._save_to_input_dict()
-        input_dict["class"] = "GPy.kern.RBFKernelKernel"
+        input_dict["class"] = "GPy.kern.RBFDistanceBuilderKernelKernel"
         input_dict["inv_l"] = self.use_invLengthscale
-        if input_dict["inv_l"] == True:
+        if input_dict["inv_l"]:
             input_dict["lengthscale"] = np.sqrt(1 / float(self.inv_l))
         return input_dict
